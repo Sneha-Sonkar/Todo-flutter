@@ -1,5 +1,8 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'todomodel.dart';
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
@@ -10,14 +13,19 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<Map<String, dynamic>> todos = [];
+  List<Todo> todos = [];
   TextEditingController textController = TextEditingController();
-  bool _isChecked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTodos();
+  }
 
   void _addItem() {
     if (textController.text != "") {
       setState(() {
-        todos.add({'title': textController.text, 'checked': false});
+        todos.add({Todo('title': textController.text, 'isDone': false)});
         textController.clear();
       });
     }
@@ -28,6 +36,24 @@ class _MyHomePageState extends State<MyHomePage> {
       todos.removeAt(index);
     });
   }
+
+ void _loadTodos() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? todosString = prefs.getString('todos');
+    if (todosString != null) {
+      final List<dynamic> todosJson = json.decode(todosString);
+      setState(() {
+        todos = todosJson.map((json) => Todo.fromMap(json)).toList();
+      });
+    }
+  }
+
+  void _saveTodos() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String todosString = json.encode(todos.map((todo) => todo.toMap()).toList());
+    prefs.setString('todos', todosString);
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -59,12 +85,12 @@ class _MyHomePageState extends State<MyHomePage> {
               itemBuilder: (context, index) {
                 return ListTile(
                   leading: Checkbox(
-                    value: todos[index]['checked'],
+                    value: todos[index]['isDone'],
                     onChanged: (bool? value) {
                       setState(() {
                         todos[index] = ({
                           'title': todos[index]['title'],
-                          'checked': value!
+                          'isDone': value!
                         });
                       });
                     },
@@ -72,7 +98,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   title: Text(
                     todos[index]['title'],
                     style: TextStyle(
-                      decoration: todos[index]['checked'] == true
+                      decoration: todos[index]['isDone']
                           ? TextDecoration.lineThrough
                           : TextDecoration.none,
                     ),
