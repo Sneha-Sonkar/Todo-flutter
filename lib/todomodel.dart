@@ -5,7 +5,7 @@ class Todo {
 
   Todo({
     required this.title,
-    this.isDone = false, required String, required String  ,
+    this.isDone = false,
   });
 
   // Convert a Todo into a Map.

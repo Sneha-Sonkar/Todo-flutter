@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'todomodel.dart';
+
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
@@ -25,9 +26,10 @@ class _MyHomePageState extends State<MyHomePage> {
   void _addItem() {
     if (textController.text != "") {
       setState(() {
-        todos.add({Todo('title': textController.text, 'isDone': false)});
+        todos.add(Todo(title: textController.text, isDone: false));
         textController.clear();
       });
+      _saveTodos();
     }
   }
 
@@ -35,9 +37,10 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       todos.removeAt(index);
     });
+    _saveTodos();
   }
 
- void _loadTodos() async {
+  void _loadTodos() async {
     final prefs = await SharedPreferences.getInstance();
     final String? todosString = prefs.getString('todos');
     if (todosString != null) {
@@ -50,10 +53,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _saveTodos() async {
     final prefs = await SharedPreferences.getInstance();
-    final String todosString = json.encode(todos.map((todo) => todo.toMap()).toList());
+    final String todosString =
+        json.encode(todos.map((todo) => todo.toMap()).toList());
     prefs.setString('todos', todosString);
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -85,20 +88,18 @@ class _MyHomePageState extends State<MyHomePage> {
               itemBuilder: (context, index) {
                 return ListTile(
                   leading: Checkbox(
-                    value: todos[index]['isDone'],
+                    value: todos[index].isDone,
                     onChanged: (bool? value) {
                       setState(() {
-                        todos[index] = ({
-                          'title': todos[index]['title'],
-                          'isDone': value!
-                        });
+                        todos[index] =
+                            (Todo(title: todos[index].title, isDone: value!));
                       });
                     },
                   ),
                   title: Text(
-                    todos[index]['title'],
+                    todos[index].title,
                     style: TextStyle(
-                      decoration: todos[index]['isDone']
+                      decoration: todos[index].isDone
                           ? TextDecoration.lineThrough
                           : TextDecoration.none,
                     ),
