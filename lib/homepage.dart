@@ -10,14 +10,17 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<String> todos = [];
+  List<Map<String, dynamic>> todos = [];
   TextEditingController textController = TextEditingController();
+  bool _isChecked = false;
 
   void _addItem() {
-    setState(() {
-      todos.add(textController.text);
-      textController.clear();
-    });
+    if (textController.text != "") {
+      setState(() {
+        todos.add({'title': textController.text, 'checked': false});
+        textController.clear();
+      });
+    }
   }
 
   void removeTodo(int index) {
@@ -31,7 +34,12 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        title: Text(
+          widget.title,
+          style: const TextStyle(
+              fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
       ),
       body: Center(
         child: Column(children: [
@@ -39,18 +47,38 @@ class _MyHomePageState extends State<MyHomePage> {
             controller: textController,
             decoration: const InputDecoration(labelText: "Your Todos"),
           ),
-          TextButton(
+          const SizedBox(height: 10),
+          ElevatedButton(
             onPressed: _addItem,
             child: const Text('Add'),
           ),
+          const SizedBox(height: 10),
           Expanded(
             child: ListView.builder(
               itemCount: todos.length,
               itemBuilder: (context, index) {
                 return ListTile(
-                  title: Text(todos[index]),
+                  leading: Checkbox(
+                    value: todos[index]['checked'],
+                    onChanged: (bool? value) {
+                      setState(() {
+                        todos[index] = ({
+                          'title': todos[index]['title'],
+                          'checked': value!
+                        });
+                      });
+                    },
+                  ),
+                  title: Text(
+                    todos[index]['title'],
+                    style: TextStyle(
+                      decoration: todos[index]['checked'] == true
+                          ? TextDecoration.lineThrough
+                          : TextDecoration.none,
+                    ),
+                  ),
                   trailing: IconButton(
-                    icon: Icon(Icons.delete),
+                    icon: const Icon(Icons.delete),
                     onPressed: () => removeTodo(index),
                   ),
                 );
